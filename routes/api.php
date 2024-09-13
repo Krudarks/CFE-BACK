@@ -1,6 +1,7 @@
 <?php
 
-use App\Http\AttendanceController;
+use App\Http\Controllers\AttendanceCarController;
+use App\Http\Controllers\AttendanceController;
 use App\Http\Controllers\Auth\AuthenticationController;
 use App\Http\Controllers\Auth\ForgotPasswordController;
 use App\Http\Controllers\Auth\ResetPasswordController;
@@ -8,6 +9,7 @@ use App\Http\Controllers\NotesController;
 use App\Http\Controllers\UserController;
 use App\Http\Controllers\UserProfilePictureController;
 use App\Http\Controllers\VehicleController;
+use App\Models\WorkerModel;
 use Illuminate\Support\Facades\Route;
 
 /*
@@ -71,6 +73,11 @@ Route::group(['middleware' => 'auth:api'], function () {
         Route::post('/change-password', [UserController::class, 'changePassword']);
     });
 
+    Route::prefix('worker')->group(function () {
+        Route::get('/', [WorkerModel::class, 'index']);
+        Route::get('/{id}', [WorkerModel::class, 'show']);;
+    });
+
     Route::prefix('vehicle')->group(function () {
         Route::get('/', [VehicleController::class, 'index']);
         Route::get('/lasted', [VehicleController::class, 'lasted']);
@@ -80,12 +87,24 @@ Route::group(['middleware' => 'auth:api'], function () {
         Route::delete('/{id}', [VehicleController::class, 'delete']);
     });
 
-    // attendance/attendance/index
     Route::prefix('attendance')->group(function () {
-        Route::get('attendance/index', [AttendanceController::class, 'index']);
-        Route::get('attendance/show/{id}', [AttendanceController::class, 'show']);
-        Route::post('attendance/register', [AttendanceController::class, 'registerEntry']);
-        Route::put('attendance/update/{id}', [AttendanceController::class, 'update']);
-        Route::delete('attendance/delete/{id}', [AttendanceController::class, 'softDelete']);
+        Route::get('/', [AttendanceController::class, 'index']);
+        Route::get('/{id}', [AttendanceController::class, 'show']);
+        Route::post('/entry', [AttendanceController::class, 'registerEntry']);
+        Route::post('/exit', [AttendanceController::class, 'registerExit']);
+        Route::get('/report/{id}', [AttendanceController::class, 'downloadReport']);
+        Route::put('/{id}', [AttendanceController::class, 'update']);
+        Route::delete('/{id}', [AttendanceController::class, 'destroy']);
+        Route::get('/status/{controlNumber}', [AttendanceController::class, 'getAttendanceStatus']);
+        Route::get('/details/{date}', [AttendanceController::class, 'getAttendanceDetails']);
+        Route::get('/all', [AttendanceController::class, 'getAllAttendances']);
+    });
+
+    Route::prefix('attenCar')->group(function () {
+        Route::get('/reports', [AttendanceCarController::class, 'index']);
+        Route::get('attenCar/reports/{id}', [AttendanceCarController::class, 'show']);
+        Route::post('attenCar/reports', [AttendanceCarController::class, 'storeDailyReport']);
+        Route::delete('attenCar/reports/{id}', [AttendanceCarController::class, 'destroy']);
+        Route::get('attenCar/vehicles', [AttendanceCarController::class, 'getVehiclesForReport']);
     });
 });

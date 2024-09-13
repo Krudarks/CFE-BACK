@@ -19,6 +19,7 @@ return new class extends Migration
             $table->timestamp('exit_time')->nullable();  // Hora de salida
             $table->date('date');                        // Fecha de asistencia
             $table->boolean('is_late')->default(false);  // Retardo
+            $table->integer('worker_count')->default(0);
             $table->timestamps();
 
             $table->softDeletes();// Para borrado suave
