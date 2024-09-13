@@ -68,6 +68,11 @@ Route::group(['middleware' => 'auth:api'], function () {
         Route::put('/{id}', [UserController::class, 'update']);
         Route::delete('/{id}', [UserController::class, 'delete']);
 
+        Route::get('/profileSetting/{user_id}', [UserProfilePictureController::class, 'settingProfile']);
+        Route::post('/addProfilePicture', [UserProfilePictureController::class, 'add']);
+        Route::delete('/deleteProfilePicture/{user_id}', [UserProfilePictureController::class, 'delete']);
+
+
         // Password
         Route::post('/check-password', [UserController::class, 'checkPassword']);
         Route::post('/change-password', [UserController::class, 'changePassword']);
@@ -89,7 +94,7 @@ Route::group(['middleware' => 'auth:api'], function () {
 
     Route::prefix('attendance')->group(function () {
         Route::get('/', [AttendanceController::class, 'index']);
-        Route::get('/{id}', [AttendanceController::class, 'show']);
+        Route::get('/getById/{id}', [AttendanceController::class, 'show']);
         Route::post('/entry', [AttendanceController::class, 'registerEntry']);
         Route::post('/exit', [AttendanceController::class, 'registerExit']);
         Route::get('/report/{id}', [AttendanceController::class, 'downloadReport']);
@@ -102,9 +107,9 @@ Route::group(['middleware' => 'auth:api'], function () {
 
     Route::prefix('attenCar')->group(function () {
         Route::get('/reports', [AttendanceCarController::class, 'index']);
-        Route::get('attenCar/reports/{id}', [AttendanceCarController::class, 'show']);
-        Route::post('attenCar/reports', [AttendanceCarController::class, 'storeDailyReport']);
-        Route::delete('attenCar/reports/{id}', [AttendanceCarController::class, 'destroy']);
-        Route::get('attenCar/vehicles', [AttendanceCarController::class, 'getVehiclesForReport']);
+        Route::get('/reports/{id}', [AttendanceCarController::class, 'show']);
+        Route::post('/reports', [AttendanceCarController::class, 'storeDailyReport']);
+        Route::delete('/reports/{id}', [AttendanceCarController::class, 'destroy']);
+        Route::get('/vehicles', [AttendanceCarController::class, 'getVehiclesForReport']);
     });
 });

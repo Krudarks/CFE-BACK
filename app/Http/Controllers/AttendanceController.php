@@ -4,7 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\AttendanceModel;
 use App\Models\WorkerModel;
-use Carbon\Carbon;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Psr\Log\LoggerInterface;
 
@@ -18,7 +18,7 @@ class AttendanceController extends Controller
     }
 
     // Registrar entrada
-    public function registerEntry(Request $request)
+    public function registerEntry(Request $request): JsonResponse
     {
         $request->validate([
             'controlNumber' => 'required|string'
@@ -53,7 +53,7 @@ class AttendanceController extends Controller
     }
 
     // Registrar salida
-    public function registerExit(Request $request)
+    public function registerExit(Request $request): JsonResponse
     {
         $request->validate([
             'controlNumber' => 'required|string'
@@ -84,11 +84,10 @@ class AttendanceController extends Controller
     }
 
     // Obtener lista de asistencias
-    public function index()
+    public function index(): JsonResponse
     {
         $attendances = AttendanceModel::with('worker')
-            ->get()
-            ->map(function ($attendance) {
+            ->get()->map(function ($attendance) {
                 $attendance->worker_count = $attendance->worker()->count(); // Establecer worker_count
                 return $attendance;
             });
@@ -97,9 +96,10 @@ class AttendanceController extends Controller
     }
 
     // Obtener detalles de asistencia
-    public function show($id)
+    public function show($id): JsonResponse
     {
         $attendance = AttendanceModel::find($id);
+
         if (!$attendance) {
             return response()->json(['message' => 'Registro no encontrado'], 404);
         }
@@ -110,18 +110,18 @@ class AttendanceController extends Controller
     // Descargar reporte de asistencia en PDF
     public function downloadReport($id)
     {
-        $attendance = AttendanceModel::find($id);
-        if (!$attendance) {
-            return response()->json(['message' => 'Registro no encontrado'], 404);
-        }
-
-
-        $pdf = \PDF::loadView('reports.attendance_report', ['attendance' => $attendance]);
-        return $pdf->download('reporte_asistencia_' . $id . '.pdf');
+//        $attendance = AttendanceModel::find($id);
+//        if (!$attendance) {
+//            return response()->json(['message' => 'Registro no encontrado'], 404);
+//        }
+//
+//
+//        $pdf = \PDF::loadView('reports.attendance_report', ['attendance' => $attendance]);
+//        return $pdf->download('reporte_asistencia_' . $id . '.pdf');
     }
 
     // Eliminar registro de asistencia
-    public function destroy($id)
+    public function destroy($id): JsonResponse
     {
         $attendance = AttendanceModel::find($id);
         if (!$attendance) {
@@ -133,7 +133,7 @@ class AttendanceController extends Controller
     }
 
     // Editar registro de asistencia
-    public function update(Request $request, $id)
+    public function update(Request $request, $id): JsonResponse
     {
         $request->validate([
             'entry_time' => 'required|date',
@@ -153,7 +153,7 @@ class AttendanceController extends Controller
     }
 
     // Obtener estado de asistencia
-    public function getAttendanceStatus($controlNumber)
+    public function getAttendanceStatus($controlNumber): JsonResponse
     {
         $worker = WorkerModel::where('user_number', $controlNumber)->first();
 
@@ -170,7 +170,7 @@ class AttendanceController extends Controller
         ]);
     }
 
-    public function getAttendanceDetails($date)
+    public function getAttendanceDetails($date): JsonResponse
     {
         // Obtener los registros de asistencia filtrados por la fecha
         $attendances = AttendanceModel::where('date', $date)->with('worker')->get();
@@ -178,13 +178,13 @@ class AttendanceController extends Controller
         return response()->json($attendances);
     }
 
-    public function getAllAttendances()
+    public function getAllAttendances(): JsonResponse
     {
         $attendances = AttendanceModel::all();
         if ($attendances->isEmpty()) {
-            return response()->json(['message' => 'No se encontraron registros'], 404);
+            return response()->json(['status' => false, 'message' => 'No se encontraron registros']);
         }
 
-        return response()->json($attendances);
+        return response()->json(['status' => true, 'message' => 'Registros Encontrados', 'data' => $attendances]);
     }
 }
