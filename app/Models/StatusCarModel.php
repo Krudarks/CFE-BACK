@@ -7,7 +7,7 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 
 class StatusCarModel extends Model
 {
-    use SoftDeletes;
+//    use SoftDeletes;
 
     protected $table = 'status_car';
 

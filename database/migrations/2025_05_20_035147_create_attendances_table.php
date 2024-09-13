@@ -14,11 +14,12 @@ return new class extends Migration
         Schema::create('attendance', function (Blueprint $table) {
             $table->id();
             $table->unsignedBigInteger('worker_id');
-            $table->string('user_number', 5); // Número de usuario registrado
+            $table->string('user_number', 5)->nullable(); // Número de usuario registrado
             $table->timestamp('entry_time')->nullable(); // Hora de entrada
             $table->timestamp('exit_time')->nullable();  // Hora de salida
-            $table->date('date');                        // Fecha de asistencia
+            $table->date('date')->nullable();                        // Fecha de asistencia
             $table->boolean('is_late')->default(false);  // Retardo
+            $table->integer('worker_count')->default(0);
             $table->timestamps();
 
             $table->softDeletes();// Para borrado suave
