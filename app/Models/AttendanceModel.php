@@ -2,13 +2,13 @@
 
 namespace App\Models;
 
+use DateTimeInterface;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\SoftDeletes;
-use Psr\Log\LoggerInterface;
 
 class AttendanceModel extends Model
 {
-    protected LoggerInterface $log;
 
     use SoftDeletes;
 
@@ -19,11 +19,17 @@ class AttendanceModel extends Model
         'entry_time',
         'exit_time',
         'date',
-        'worker_count'
+        'worker_count',
+        'user_number',
     ];
 
+    protected function serializeDate(DateTimeInterface $date): string
+    {
+        return $date->format('Y-m-d H:i:s');
+    }
+
     // Relación con el modelo Worker
-    public function worker()
+    public function worker(): BelongsTo
     {
         return $this->belongsTo(WorkerModel::class);
     }

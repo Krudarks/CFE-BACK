@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\AttendanceModel;
 use App\Models\WorkerModel;
+use Carbon\Carbon;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Psr\Log\LoggerInterface;
@@ -18,81 +19,60 @@ class AttendanceController extends Controller
     }
 
     // Registrar entrada
-    public function registerEntry(Request $request): JsonResponse
+    public function registerAttendance(Request $request): JsonResponse
     {
         $request->validate([
-            'controlNumber' => 'required|string'
+            'employeeId' => 'required|string'
         ]);
 
-        $worker = WorkerModel::where('user_number', $request->controlNumber)->first();
+        // tabla de empleados
+        $worker = WorkerModel::where('user_number', $request->employeeId)->with(['user.role'])->first();
 
         if (!$worker) {
-            return response()->json(['message' => 'Número de control no válido'], 400);
+            return response()->json(['message' => 'Número de control no válido']);
         }
+
 
         // Verificar si ya ha registrado entrada
         $attendance = AttendanceModel::where('worker_id', $worker->id)
             ->whereDate('date', today())
             ->first();
 
-        if ($attendance && $attendance->entry_time) {
-            return response()->json(['message' => 'Ya has registrado entrada'], 400);
+        if (!$attendance) { // si no existe es entrada se crea registro
+            $attendance = AttendanceModel::create([
+                'worker_id' => $worker->id,
+                'entry_time' => now(),
+                'date' => today(),
+                'user_number' => $worker->user_number,
+                'exit_time' => null,
+            ]);
+
+            return response()->json([
+                'status' => true,
+                'message' => 'Entrada registrada con éxito',
+                'attendance' => $attendance,
+                'worker' => $worker
+            ]);
         }
 
-        if ($attendance) {
-            $attendance->entry_time = now();
-        } else {
-            $attendance = new AttendanceModel();
-            $attendance->worker_id = $worker->id;
-            $attendance->entry_time = now();
-            $attendance->date = today();
-        }
-        $attendance->save();
-
-        return response()->json(['message' => 'Entrada registrada con éxito']);
-    }
-
-    // Registrar salida
-    public function registerExit(Request $request): JsonResponse
-    {
-        $request->validate([
-            'controlNumber' => 'required|string'
-        ]);
-
-        $worker = WorkerModel::where('user_number', $request->controlNumber)->first();
-
-        if (!$worker) {
-            return response()->json(['message' => 'Número de control no válido'], 400);
-        }
-
-        $attendance = AttendanceModel::where('worker_id', $worker->id)
-            ->whereDate('date', today())
-            ->first();
-
-        if (!$attendance || !$attendance->entry_time) {
-            return response()->json(['message' => 'No has registrado entrada'], 400);
-        }
-
-        if ($attendance->exit_time) {
-            return response()->json(['message' => 'Ya has registrado salida'], 400);
-        }
-
+        // ya existe es salida se registra salida
         $attendance->exit_time = now();
         $attendance->save();
 
-        return response()->json(['message' => 'Salida registrada con éxito']);
+        return response()->json([
+            'status' => true,
+            'message' => 'Salida registrada con éxito',
+            'attendance' => $attendance,
+            'worker' => $worker
+        ]);
     }
 
     // Obtener lista de asistencias
     public function index(): JsonResponse
     {
-        $attendances = AttendanceModel::with('worker')
-            ->get()->map(function ($attendance) {
-                $attendance->worker_count = $attendance->worker()->count(); // Establecer worker_count
-                return $attendance;
-            });
+        $attendances = AttendanceModel::with(['worker.user'])->get();
 
-        return response()->json($attendances);
+        return response()->json(['status' => true, 'message' => 'Datos obtenidos', 'attendances' => $attendances]);
     }
 
     // Obtener detalles de asistencia
@@ -170,21 +150,24 @@ class AttendanceController extends Controller
         ]);
     }
 
-    public function getAttendanceDetails($date): JsonResponse
+    public function getAttendanceDetails(Request $request): JsonResponse
     {
         // Obtener los registros de asistencia filtrados por la fecha
-        $attendances = AttendanceModel::where('date', $date)->with('worker')->get();
+        $attendances = AttendanceModel::where('date', $request->date)->with(['worker.user.role'])->get();
 
-        return response()->json($attendances);
+        return response()->json(['status' => true, 'message' => 'Datos obtenidos', 'attendances' => $attendances]);
     }
 
     public function getAllAttendances(): JsonResponse
     {
-        $attendances = AttendanceModel::all();
-        if ($attendances->isEmpty()) {
-            return response()->json(['status' => false, 'message' => 'No se encontraron registros']);
-        }
+        $attendanceGroupedByDate = AttendanceModel::select('date')
+            ->selectRaw('count(*) as total_entries')
+            ->groupBy('date')
+            ->orderBy('date')
+            ->get()
+            ->values()
+            ->toArray();
 
-        return response()->json(['status' => true, 'message' => 'Registros Encontrados', 'data' => $attendances]);
+        return response()->json(['status' => true, 'message' => 'Registros Encontrados', 'data' => $attendanceGroupedByDate]);
     }
 }

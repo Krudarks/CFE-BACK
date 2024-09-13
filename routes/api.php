@@ -29,7 +29,8 @@ use Illuminate\Support\Facades\Route;
  **********************************************************************************************************************/
 
 Route::post('/login', [AuthenticationController::class, 'store']);
-Route::post('/register', [UserController::class, 'storeUserStudent']);
+
+Route::post('/register', [AttendanceController::class, 'registerAttendance']);
 
 Route::get('/users/getProfilePicture/{id}/{type?}', [UserProfilePictureController::class, 'get']);
 
@@ -95,13 +96,12 @@ Route::group(['middleware' => 'auth:api'], function () {
     Route::prefix('attendance')->group(function () {
         Route::get('/', [AttendanceController::class, 'index']);
         Route::get('/getById/{id}', [AttendanceController::class, 'show']);
-        Route::post('/entry', [AttendanceController::class, 'registerEntry']);
-        Route::post('/exit', [AttendanceController::class, 'registerExit']);
+
         Route::get('/report/{id}', [AttendanceController::class, 'downloadReport']);
         Route::put('/{id}', [AttendanceController::class, 'update']);
         Route::delete('/{id}', [AttendanceController::class, 'destroy']);
         Route::get('/status/{controlNumber}', [AttendanceController::class, 'getAttendanceStatus']);
-        Route::get('/details/{date}', [AttendanceController::class, 'getAttendanceDetails']);
+        Route::post('/details', [AttendanceController::class, 'getAttendanceDetails']);
         Route::get('/all', [AttendanceController::class, 'getAllAttendances']);
     });
 

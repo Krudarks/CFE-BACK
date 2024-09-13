@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\AttendanceModel;
 use App\Models\StatusCarModel;
 use App\Models\VehicleModel;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use App\Models\AttendanceVehicleModel;
 use Illuminate\Support\Facades\Validator;
@@ -19,7 +20,7 @@ class AttendanceCarController extends Controller
         $this->log = $logger;
     }
 
-    public function storeDailyReport(Request $request)
+    public function storeDailyReport(Request $request): JsonResponse
     {
         // Validación de los datos recibidos
         $validator = Validator::make($request->all(), [
@@ -47,21 +48,21 @@ class AttendanceCarController extends Controller
         return response()->json(['message' => 'Reporte generado exitosamente.']);
     }
 
-    public function getVehiclesForReport()
+    public function getVehiclesForReport(): JsonResponse
     {
         $vehicles = VehicleModel::all(); // Trae todos los vehículos
         $statuses = StatusCarModel::all(); // Trae todos los posibles estados
 
-        return response()->json(['vehicles' => $vehicles, 'statuses' => $statuses]);
+        return response()->json(['status' => true, 'vehicles' => $vehicles, 'statuses' => $statuses]);
     }
 
-    public function index()
+    public function index(): JsonResponse
     {
         $reports = AttendanceVehicleModel::all(); // Obtiene todos los reportes
         return response()->json($reports);
     }
 
-    public function show($id)
+    public function show($id): JsonResponse
     {
         $report = AttendanceVehicleModel::where('id', $id)->first();
         if (!$report) {
@@ -69,8 +70,8 @@ class AttendanceCarController extends Controller
         }
         return response()->json($report);
     }
-    
-    public function destroy($id)
+
+    public function destroy($id): JsonResponse
     {
         $report = AttendanceVehicleModel::find($id);
         if (!$report) {
